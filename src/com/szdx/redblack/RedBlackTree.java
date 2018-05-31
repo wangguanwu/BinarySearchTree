@@ -310,6 +310,7 @@ public class RedBlackTree<K,V> {
             this.left = left;
             this.right = right;
             this.parent = parent;
+            int i =  0 ;
 
         }
     }
