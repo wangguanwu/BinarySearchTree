@@ -302,6 +302,15 @@ public class RedBlackTree<K,V> {
         public void setColor(String color) {
             this.color = color;
         }
+
+        public RBTNode(K key, V value, String color, RBTNode<K, V> left, RBTNode<K, V> right, RBTNode<K, V> parent) {
+            this.key = key;
+            this.value = value;
+            this.color = color;
+            this.left = left;
+            this.right = right;
+            this.parent = parent;
+        }
     }
 
 }
