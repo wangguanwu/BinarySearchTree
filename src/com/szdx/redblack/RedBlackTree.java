@@ -1,6 +1,7 @@
 package com.szdx.redblack;
 
-import java.util.Comparator;
+import java.lang.reflect.Array;
+import java.util.*;
 
 public class RedBlackTree<K,V> {
     private RBTNode<K,V> root ;
@@ -37,6 +38,7 @@ public class RedBlackTree<K,V> {
         }
         return y ;
     }
+
     public RBTNode<K,V> deleteNode( RBTNode<K,V> z ){
         RBTNode<K,V> y = null , x = null ;
         if( z.left == null || z.right == null )//如果z的左孩子为空或者右孩子为空，将z赋值给y
@@ -61,7 +63,8 @@ public class RedBlackTree<K,V> {
         }
         if( y.color.equals("black"))//如果是黑色节点
 
-        return y ;
+             return y ;
+        return null ;
     }
     private void deleteFixup( RBTNode<K,V> x){
         RBTNode<K,V> w = null ;
@@ -168,14 +171,14 @@ public class RedBlackTree<K,V> {
     public void insert( RBTNode<K,V> z ){
         RBTNode<K,V> rbtNode = new RBTNode<K,V>();
         RBTNode<K,V> x = root ,y = null;
-        do{
+        while( x != null );{
                 y = x ;
                 if( comparator.compare(x.key , z.key) > 0){
                     x = x.left ;
                 }else{
                     x = x.right;
                 }
-        } while( x != null );
+        }
         z.parent = y ;
         if( y == null )
             root = y ;
@@ -217,11 +220,11 @@ public class RedBlackTree<K,V> {
                         z = z.parent.parent;//将当前节点z置为z的祖父指点,在迭代中判断z是否破坏
                     } else if ( z == z.parent.left) {//case3-2:叔叔节点是黑色，而且z是z父母节点的左孩子
                         z = z.parent ;//将z的父母节点赋给z
-                        leftRotate( z );//左旋
+                        rightRotate( z );//左旋
                     } else {//case3-3:叔叔是黑色，z是z父母节点的右孩子
                         z.parent.color = "black";//将z的父母节点赋值为黑色
                         z.parent.parent.color="red";//将z的祖父节点的颜色变为红色
-                        rightRotate( z.parent.parent );//对z的祖父节点进行右旋
+                        leftRotate( z.parent.parent );//对z的祖父节点进行右旋
                     }
                 }
 
@@ -310,9 +313,61 @@ public class RedBlackTree<K,V> {
             this.left = left;
             this.right = right;
             this.parent = parent;
-            int i =  0 ;
-
         }
     }
+    public void printRBT(){
+        System.out.print("先序遍历:");
+        preOrder(root);
+        System.out.println();
+        System.out.print("中序遍历");
+        inOrder(root);
+        System.out.println();
+        System.out.println("后序遍历");
+        postOrder(root);
+
+
+    }
+    private void preOrder(RBTNode<K,V> r){
+        if( r != null){
+            System.out.print(r.key+"("+r.color+")");
+            preOrder(r.left);
+            preOrder(r.right);
+        }
+    }
+    private void inOrder(RBTNode<K,V> r){
+        if( r != null){
+            inOrder(r.left);
+            System.out.print(r.key+"("+r.color+")");
+            inOrder(r.right);
+        }
+    }
+    private void postOrder(RBTNode<K,V> r){
+        if( r != null){
+            postOrder(r.left);
+            postOrder(r.right);
+            System.out.print(r.key+"("+r.color+")");
+        }
+    }
+
+    public static void main(String args[]){
+        RedBlackTree<Integer,Integer> rbt = new RedBlackTree<Integer, Integer>();
+        rbt.setComparator(new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return o1.compareTo(o2) ;
+            }
+        });
+        Random random = new Random(10);
+        int a[] = new int[10] ;
+        for( int i = 0 ; i < 10 ;i ++ ){
+            a[i] = random.nextInt(1000);
+        }
+        System.out.println(Arrays.toString(a)) ;
+        for( int i : a){
+            rbt.insert(i , null);
+        }
+
+    }
+
 
 }
