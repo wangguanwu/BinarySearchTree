@@ -171,7 +171,7 @@ public class RedBlackTree<K,V> {
     public void insert( RBTNode<K,V> z ){
         RBTNode<K,V> rbtNode = new RBTNode<K,V>();
         RBTNode<K,V> x = root ,y = null;
-        while( x != null );{
+        while( x !=null ){
                 y = x ;
                 if( comparator.compare(x.key , z.key) > 0){
                     x = x.left ;
@@ -181,7 +181,7 @@ public class RedBlackTree<K,V> {
         }
         z.parent = y ;
         if( y == null )
-            root = y ;
+            root = z ;
         else if( comparator.compare(z.key ,y.key) > 0)//如果z节点的key大于y的key
             y.right = z ;//y的右孩子设为x
         else
@@ -194,8 +194,7 @@ public class RedBlackTree<K,V> {
         while(z.parent!=null&&z.parent.color.equals("red")){//case3:如果被插入节点的父母节点是红色
             if( z.parent.parent!=null&& z.parent == z.parent.parent.left ){//如果z的父母节点是z的祖父母的左孩子
                 RBTNode<K,V> y = z.parent.parent.right;//y是z的叔叔节点
-                if( y!=null ) {
-                    if (y.color.equals("red")) {//case3-1:如果叔叔节点是红色的
+                    if (y!=null&&y.color.equals("red")) {//case3-1:如果叔叔节点是红色的
                         z.parent.color = "black";//z的双亲节点变成黑色
                         y.color = "black";//叔叔节点变成黑色
                         z.parent.parent.color = "red";//祖父节点颜色变成红色
@@ -208,12 +207,9 @@ public class RedBlackTree<K,V> {
                         z.parent.parent.color="red";//将z的祖父节点的颜色变为红色
                         rightRotate( z.parent.parent );//对z的祖父节点进行右旋
                     }
-                }
-
             }else{//z的父母节点是祖父母的节点的右孩子，所以这里的操作只需要将上面的左右对调就行了
                 RBTNode<K,V> y = z.parent.parent.left;//y是z的叔叔节点
-                if( y!=null ) {
-                    if (y.color.equals("red")) {//case3-1:如果叔叔节点是红色的
+                    if (y!=null&&y.color.equals("red")) {//case3-1:如果叔叔节点是红色的
                         z.parent.color = "black";//z的双亲节点变成黑色
                         y.color = "black";//叔叔节点变成黑色
                         z.parent.parent.color = "red";//祖父节点颜色变成红色
@@ -224,10 +220,8 @@ public class RedBlackTree<K,V> {
                     } else {//case3-3:叔叔是黑色，z是z父母节点的右孩子
                         z.parent.color = "black";//将z的父母节点赋值为黑色
                         z.parent.parent.color="red";//将z的祖父节点的颜色变为红色
-                        leftRotate( z.parent.parent );//对z的祖父节点进行右旋
+                        leftRotate( z.parent.parent );//对z的祖父节点进行左旋
                     }
-                }
-
             }
         }
         root.color="black";//把树根修改成黑色(case2:如果插入的节点是树根，那么可以直接修改树根节点)
@@ -357,15 +351,16 @@ public class RedBlackTree<K,V> {
                 return o1.compareTo(o2) ;
             }
         });
-        Random random = new Random(10);
-        int a[] = new int[10] ;
-        for( int i = 0 ; i < 10 ;i ++ ){
-            a[i] = random.nextInt(1000);
+        Random random = new Random(20);
+        int a[] = new int[8] ;
+        for( int i = 0 ; i < 8 ;i ++ ){
+            a[i] = random.nextInt(100);
         }
         System.out.println(Arrays.toString(a)) ;
         for( int i : a){
             rbt.insert(i , null);
         }
+        rbt.printRBT();
 
     }
 
