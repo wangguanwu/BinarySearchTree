@@ -328,6 +328,15 @@ public class RedBlackTree<K,V> {
             preOrder(r.right);
         }
     }
+    private void transplant( RBTNode<K ,V> u, RBTNode<K,V> v){//移植,把v移动到u的位置
+        if ( u.parent == null )
+            root = v ;
+        else if ( u == u.parent.left )
+            u.parent.left = v ;
+        else
+            u.parent.right = v ;
+        v.parent = u.parent ;
+    }
     private void inOrder(RBTNode<K,V> r){
         if( r != null){
             inOrder(r.left);
