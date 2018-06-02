@@ -1,5 +1,7 @@
 package com.szdx.redblack;
 
+import javax.xml.soap.Node;
+import java.awt.*;
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -21,12 +23,6 @@ public class RedBlackTree<K,V> {
     public RBTNode getRoot() {
         return root;
     }
-    public RBTNode<K,V> minimum( RBTNode<K,V> node ){
-        while(  node!=null  ){
-            node = node.left ;
-        }
-        return node ;
-    }
     public RBTNode<K,V> successor( RBTNode<K,V> s){//寻找后继
         if( s.right != null ){
             return minimum( s.right ) ;
@@ -38,95 +34,141 @@ public class RedBlackTree<K,V> {
         }
         return y ;
     }
+    private RBTNode<K,V> minimum( RBTNode<K,V> r) {//找到r的最小节点
+        while( r.left!=null ){
+            r = r.left ;
+        }
+        return r ;
+    }
 
     public RBTNode<K,V> deleteNode( RBTNode<K,V> z ){
-        RBTNode<K,V> y = null , x = null ;
-        if( z.left == null || z.right == null )//如果z的左孩子为空或者右孩子为空，将z赋值给y
-            y = z ;
-        else//如果存在左右孩子，那么把z的后继节点赋予y
-            y = successor( z ) ;
-        if( y.left != null ){
-            x = y.left ;
-        }else
-            x = y.right ;
-        if( x != null )
-             x.parent = y.parent ;//将y的父母节点设为x的父母节点
-        if( y.parent == null )//如果y的父母节点是空，那么y就是树根
-            root = x ;//将x设为树根
-        else if( y == y.parent.left )//如果y为y父母的左孩子
-            y.parent.left = x ;//设x为y的父母的左孩子
-        else
-            y.parent.right = x ;//如果y是y父母的右孩子那么将y父母的右孩子设为x
-        if ( y!= x ){//只拷贝值
-            z.key = y.key;
-            z.value = y.value ;
+//        RBTNode<K,V> y = null , x = null ;
+//        if( z.left == null || z.right == null )//如果z的左孩子为空或者右孩子为空，将z赋值给y
+//            y = z ;
+//        else//如果存在左右孩子，那么把z的后继节点赋予y
+//            y = successor( z ) ;
+//        if( y.left != null ){
+//            x = y.left ;
+//        }else
+//            x = y.right ;
+//        if( x != null )
+//             x.parent = y.parent ;//将y的父母节点设为x的父母节点
+//        if( y.parent == null )//如果y的父母节点是空，那么y就是树根
+//            root = x ;//将x设为树根
+//        else if( y == y.parent.left )//如果y为y父母的左孩子
+//            y.parent.left = x ;//设x为y的父母的左孩子
+//        else
+//            y.parent.right = x ;//如果y是y父母的右孩子那么将y父母的右孩子设为x
+//        if ( y!= x ){//只拷贝值
+//            z.key = y.key;
+//            z.value = y.value ;
+//        }
+//        if( y.color.equals("black"))//如果是黑色节点
+//
+//             return y ;
+//        return null ;
+        RBTNode<K,V> y = z ;
+        RBTNode<K,V> x = null ;
+        RBTNode<K,V> x_parent = null ;//保存x的父节点，因为如果x为空，那么x无法访问父节点
+        String y_orginal_color = y.color ;//保存y的最初的颜色，因为最后是删除y的颜色
+        if ( z.left == null ) {//如果左子树是空
+            x = z.right ;
+            transplant( z , z.right );//把z的右子树移植到z的位置
+            x_parent = z.parent ;
         }
-        if( y.color.equals("black"))//如果是黑色节点
-
-             return y ;
-        return null ;
+        else if ( z.right == null ){//右子树为空
+            x = z.left ;
+            x_parent = z ;
+            transplant(z , z.left );//左子树不为空，右子树为空，把左子树移植到z的位置
+            x_parent = z.parent;
+        }else{//左右子树都不为空
+            y = minimum( z.right ) ;//y为z的后继,y的左子树一定为空
+            y_orginal_color = y.color ;
+            x = y.right ;
+            if( y.parent == z ){//如果y是z的右孩子
+                if (x != null)
+                    x.parent = y;
+                    x_parent = y ;
+            }
+            else {//如果y不是z的右孩子
+                    transplant(y, y.right);//移植y的右孩子到y的位置
+                    x_parent = y.parent ;
+                    y.right = z.right ;//y的右孩子设为z
+                    y.right.parent = y ;//y的右孩子的父母设为y
+            }
+            transplant( z , y );//把y移植到z的位置
+            y.left = z.left ;
+            if(y.left!=null)
+                y.left.parent = y ;
+            y.color = z.color ;//y的颜色设置为被删除节点z的颜色，这是为了维护红黑树的性质
+        }
+        if(root == null )
+            return null;
+        if( y_orginal_color == "black")//如果删除的节点是黑色的，那就可能破坏了红黑是的性质，需要修正
+            deleteFixup( x ,x_parent);//修正红黑树的函数
+        return z ;
     }
-    private void deleteFixup( RBTNode<K,V> x){
+    private void deleteFixup( RBTNode<K,V> x ,RBTNode<K,V> x_parent){
         RBTNode<K,V> w = null ;
-        while( root != x && x.color == "black"){
-            if( x.parent!= null ){
-                if( x == x.parent.left ){//如果x是父节点的左孩子
-                    w = x.parent.right ;//w是x的兄弟节点
-                    if( w!= null) {
-                        if ( w.color == "red") {//case1:x是"黑+黑"节点，x的兄弟节点是红色
-                            w.color = "black";//将x的兄弟节点设为黑
-                            x.parent.color = "red";
-                            leftRotate(x.parent);//对x的父节点进行左旋
-                            w = x.parent.right;//左旋后重新设置x的兄弟节点
-                        } else if ( w.left.color == "black" && w.right.color=="black"){//case2:x是"黑+黑"节点，
-                            // x的兄弟节点是黑，而且兄弟节点的两个孩子节点都是黑色
-                            w.color = "red" ;
-                            x = x.parent ;
-                        }else if( w.right.color == "black") {//case2:x是"黑+黑"节点，
-                            // x的兄弟节点w是黑色，而且兄弟节点的左孩子是红色，右孩子是黑色的
-                            w.left.color = "black";
-                            w.color = "red" ;
-                            rightRotate(w);
-                            w = x.parent.right;
-                        }else {//case 4:case2:x是"黑+黑"节点，
-                            // x的兄弟节点w是黑色，而且兄弟节点的右孩子是红色的
-                            w.color = x.parent.color ;//将父节点的颜色赋给兄弟节点
-                            x.parent.color = "black";//将父节点的颜色设置为黑色
-                            w.right.color = "black";//将兄弟节点的颜色设为黑色
-                            rightRotate( x.parent );//对x的父节点进行左旋
-                            x = root ;
+        while( root != x && (x==null||x.color == "black")){
 
-                        }
+            if (x == x_parent.left ) {//如果x是父节点的左孩子
+                w = x_parent.right;//w是x的兄弟节点
+                if (w != null) {
+                    if (w.color == "red") {//case1:x是"黑+黑"节点，x的兄弟节点是红色
+                        w.color = "black";//将x的兄弟节点设为黑
+                        x_parent.color = "red";
+                        leftRotate( x_parent );//对x的父节点进行左旋
+                        w = x_parent.right;//左旋后重新设置x的兄弟节点
+                    } else if ((w.left == null && w.right == null) || (w.right == null && w.left.color == "black") || (w.left == null && w.right.color == "black") ||
+                            (w.left !=null&&w.right!=null&&w.left.color == "black" && w.right.color == "black")) {//case2:x是"黑+黑"节点，
+                        // x的兄弟节点是黑，而且兄弟节点的两个孩子节点都是黑色
+                        w.color = "red";
+                        x = x_parent;
+                        x_parent = x.parent ;
+                    } else if (w.right == null || w.right.color == "black") {//case2:x是"黑+黑"节点，
+                        // x的兄弟节点w是黑色，而且兄弟节点的左孩子是红色，右孩子是黑色的
+                        w.left.color = "black";
+                        w.color = "red";
+                        rightRotate(w);
+                        w = x_parent.right;
+                    } else {//case 4:case2:x是"黑+黑"节点，
+                        // x的兄弟节点w是黑色，而且兄弟节点的右孩子是红色的
+                        w.color = x_parent.color;//将父节点的颜色赋给兄弟节点
+                        x_parent.color = "black";//将父节点的颜色设置为黑色
+                        w.right.color = "black";//将兄弟节点的颜色设为黑色
+                        leftRotate(x_parent);//对x的父节点进行左旋
+                        x = root;
                     }
-                }else{//如果x是x父母的右孩子
-                    w = x.parent.left ;//w是x的兄弟节点
-                    if( w!= null) {
-                        if ( w.color == "red") {//case1:x是"黑+黑"节点，x的兄弟节点是红色
-                            w.color = "black";//将x的兄弟节点设为黑
-                            x.parent.color = "red";
-                            leftRotate(x.parent);//对x的父节点进行左旋
-                            w = x.parent.left;//左旋后重新设置x的兄弟节点
-                        } else if ( w.left.color == "black" && w.right.color=="black"){//case2:x是"黑+黑"节点，
-                            // x的兄弟节点是黑，而且兄弟节点的两个孩子节点都是黑色
-                            w.color = "red" ;
-                            x = x.parent ;
-                        }else if( w.left.color == "black") {//case2:x是"黑+黑"节点，
-                            // x的兄弟节点w是黑色，而且兄弟节点的左孩子是红色，右孩子是黑色的
-                            w.right.color = "black";
-                            w.color = "red" ;
-                            rightRotate(w);
-                            w = x.parent.left;
-                        }else {//case 4:case2:x是"黑+黑"节点，
-                            // x的兄弟节点w是黑色，而且兄弟节点的右孩子是红色的
-                            w.color = x.parent.color ;//将父节点的颜色赋给兄弟节点
-                            x.parent.color = "black";//将父节点的颜色设置为黑色
-                            w.left.color = "black";//将兄弟节点的颜色设为黑色
-                            rightRotate( x.parent );//对x的父节点进行左旋
-                            x = root ;
-
-                        }
+                }
+            } else {//如果x是x父母的右孩子
+                w = x_parent.left;//w是x的兄弟节点
+                if (w != null) {
+                    if (w.color == "red") {//case1:x是"黑+黑"节点，x的兄弟节点是红色
+                        w.color = "black";//将x的兄弟节点设为黑
+                        x_parent.color = "red";
+                        rightRotate(x_parent);//对x的父节点进行左旋
+                        w = x_parent.left;//左旋后重新设置x的兄弟节点
+                    } else if ((w.left == null && w.right == null) || (w.right == null && w.left.color == "black") || (w.left == null && w.right.color == "black") ||
+                            (w.left !=null&&w.right!=null&&w.left.color == "black" && w.right.color == "black")) {//case2:x是"黑+黑"节点，
+                        // x的兄弟节点是黑，而且兄弟节点的两个孩子节点都是黑色
+                        w.color = "red";
+                        x = x_parent;
+                        x_parent = x.parent ;
+                    } else if (w.left == null || w.left.color == "black") {//case2:x是"黑+黑"节点，
+                        // x的兄弟节点w是黑色，而且兄弟节点的右孩子是红色，左孩子是黑色的
+                        w.right.color = "black";
+                        w.color = "red";
+                        leftRotate(w);
+                        w = x_parent.left;
+                    } else {//case 4:case2:x是"黑+黑"节点，
+                        // x的兄弟节点w是黑色，而且兄弟节点的左孩子是红色的
+                        w.color = x_parent.color;//将父节点的颜色赋给兄弟节点
+                        x_parent.color = "black";//将父节点的颜色设置为黑色
+                        w.left.color = "black";//将兄弟节点的颜色设为黑色
+                        rightRotate(x_parent);//对x的父节点进行右旋
+                        x = root;
                     }
-
                 }
             }
         }
@@ -310,14 +352,19 @@ public class RedBlackTree<K,V> {
         }
     }
     public void printRBT(){
+        if(root == null) {
+            System.out.println("该树是空树");
+            return ;
+        }
         System.out.print("先序遍历:");
         preOrder(root);
         System.out.println();
-        System.out.print("中序遍历");
+        System.out.print("中序遍历:");
         inOrder(root);
         System.out.println();
-        System.out.println("后序遍历");
+        System.out.print("后序遍历:");
         postOrder(root);
+        System.out.println();
 
 
     }
@@ -335,7 +382,8 @@ public class RedBlackTree<K,V> {
             u.parent.left = v ;
         else
             u.parent.right = v ;
-        v.parent = u.parent ;
+        if( v != null)//保证v不为空
+           v.parent = u.parent ;
     }
     private void inOrder(RBTNode<K,V> r){
         if( r != null){
@@ -344,6 +392,26 @@ public class RedBlackTree<K,V> {
             inOrder(r.right);
         }
     }
+    private RBTNode<K,V> getNode( K k ){//寻找与key 相应的node节点
+        RBTNode<K,V> x = root ;
+        while( x != null ){
+            if( comparator.compare(x.key , k )> 0){
+                x = x.left ;
+            }else if(comparator.compare(x.key , k)<0){
+                x = x.right ;
+            }else
+                return x ;
+        }
+        return null ;
+    }
+    public void deleteNode(K key ){//删除k为value的节点
+        RBTNode<K,V> rbtNode = this.getNode( key ) ;
+        if( rbtNode == null ){
+            return ;
+        }
+        this.deleteNode(rbtNode) ;
+    }
+
     private void postOrder(RBTNode<K,V> r){
         if( r != null){
             postOrder(r.left);
@@ -360,18 +428,25 @@ public class RedBlackTree<K,V> {
                 return o1.compareTo(o2) ;
             }
         });
-        Random random = new Random(20);
         int a[] = new int[8] ;
         for( int i = 0 ; i < 8 ;i ++ ){
-            a[i] = random.nextInt(100);
+            a[i] = (int)(Math.random()*1001);
         }
         System.out.println(Arrays.toString(a)) ;
         for( int i : a){
             rbt.insert(i , null);
         }
         rbt.printRBT();
+        System.out.println("\n测试删除:");
+        for( int i = 0 ; i < 8 ;i ++){
+            System.out.println("删除节点 "+a[i]);
+            rbt.deleteNode(a[i]);
+            System.out.println("结果:");
+            rbt.printRBT();
+            System.out.println();
+        }
 
     }
-
-
 }
+/*
+* [53, 36, 1, 61, 5, 95, 33, 55]*/
